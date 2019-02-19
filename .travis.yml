@@ -1,0 +1,15 @@
+language: scala
+scala:
+- 2.12.7
+script:
+- sbt assembly
+before_deploy:
+- mv target/scala-2.12/marathon-capabilities-plugin-assembly-*.jar marathon-capabilities-plugin.jar
+deploy:
+  provider: releases
+  api_key:
+    secure: IdPk2HZlgPGdfe5XjxwzioUJ5/44sMtDBy7ZMPWCYW6KeE6RwV1sVL38GLuCSqjVor74EpihddVeinECYfX1aCJwjG2aF327rWF4nU8mpzp/Q3u91HT1zyxUrNE5I84Jb7CPNNcXzNKD8F6NgfdElpl/kTrchB5u8fch9HQCilPPMXc4YR2WSIDAh6QZyhb3yu7mNw9L+NAhfPDbgupWt9E0FvUzG7dLm6yD0JSyKLHzNLKrpSZ/8HhRz/pEPxD8oFlyTn21VtzLZXgT/uoWg/ty3X1GKlYERACQMfh9ojeoH02A8ttAsDTEnWuyXIAeKLFGXdWFlwwjEljROpj1EIj19BOT2zcyk0VG90dPKSRYIPLSrlbbet0pg0bUTZq2sN5CuaZeeMmWR5DNkRjtzR1aUZCyWk4L7NtDi4OdrGHNwAjEnbSzmrXLn5++zdHEVnxlGZlB48GzpIojCtzuF4XHOtSYumc5+lmY4P235AhT3ildlLXW38CsrxR5mWzXA017EAMsab8uXG0nhZ7EAajWHNsRygz7C1P0dOafLPeBvEppYVdj+jUxLGvhkKv8SsZLS29jlfW+lQPGV743SIIYP/tHm4bf71/eYJu+c97WwkSVu3am91/RFdjYihB0yWzBz6tt0ST+bJ2qIDloZemBgoZhWv2XNX6Ap06rHWU=
+  file: marathon-capabilities-plugin.jar
+  on:
+    repo: criteo/marathon-capabilities-plugin
+    tags: true
