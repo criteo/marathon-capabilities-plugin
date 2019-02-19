@@ -29,32 +29,36 @@ class CapabilitiesPlugin extends RunSpecTaskProcessor with PluginConfiguration w
     }
   }
 
-  private def extractCapabilitiesFromLabels(builder: TaskInfo.Builder, capabilitiesLabelName: String): Option[CapabilityInfo] = {
+  private def extractCapabilitiesFromLabels(builder: TaskInfo.Builder, capabilitiesLabelName: String)
+    : (Seq[String], Option[CapabilityInfo]) = {
     import collection.JavaConverters._
 
     val capabilitiesLabels = builder.getLabels.getLabelsList.stream()
       .filter(_.getKey.equals(capabilitiesLabelName)).collect(Collectors.toList())
 
     if (capabilitiesLabels.size() == 0) {
-      return None
+      return (Seq(), None)
     }
 
     if (capabilitiesLabels.size() > 1) {
       logger.info(s"There should be only exactly one label with key $capabilitiesLabelName for " +
         s"task ${builder.getTaskId}")
-      return None
+      return (Seq(), None)
     }
 
-    val capabilities = capabilitiesLabels.get(0).getValue.split(";")
+    val capabilities = capabilitiesLabels.get(0).getValue.split(",")
       .map(_.trim)
-      .map(capabilityStrToCapability)
-      .filter(_.isDefined)
-      .map(_.get)
-      .toSeq.asJava
+      .map(c => (c, capabilityStrToCapability(c))).toSeq
 
+    val unknownCapabilitiesStr = capabilities.filter(_._2.isEmpty).map(_._1)
 
-    Some(CapabilityInfo.newBuilder()
-      .addAllCapabilities(capabilities).build())
+    val filteredCapabilities = capabilities
+      .filter(_._2.isDefined)
+      .map(_._2.get)
+      .asJava
+
+    (unknownCapabilitiesStr, Some(CapabilityInfo.newBuilder()
+      .addAllCapabilities(filteredCapabilities).build()))
   }
 
   override def taskInfo(appSpec: ApplicationSpec,
@@ -64,8 +68,17 @@ class CapabilitiesPlugin extends RunSpecTaskProcessor with PluginConfiguration w
       return
     }
 
-    val boundingCapabilitiesBuilder = extractCapabilitiesFromLabels(builder, MESOS_BOUNDING_CAPABILITIES_LABEL)
-    val effectiveCapabilitiesBuilder = extractCapabilitiesFromLabels(builder, MESOS_EFFECTIVE_CAPABILITIES_LABEL)
+    val (unknownBoundingCapabilities, boundingCapabilitiesBuilder) = extractCapabilitiesFromLabels(
+      builder, MESOS_BOUNDING_CAPABILITIES_LABEL)
+    val (unknownEffectiveCapabilities, effectiveCapabilitiesBuilder) = extractCapabilitiesFromLabels(
+      builder, MESOS_EFFECTIVE_CAPABILITIES_LABEL)
+
+    if (unknownBoundingCapabilities.nonEmpty || unknownEffectiveCapabilities.nonEmpty) {
+      val unknownCapabilities = unknownBoundingCapabilities.union(unknownEffectiveCapabilities).toSet.mkString(", ")
+      builder.getCommandBuilder.setValue(
+        s"echo 'Unknown capabilities: $unknownCapabilities. Please double check your configuration.' >&2 && exit 1")
+      return
+    }
 
     if (boundingCapabilitiesBuilder.isEmpty && effectiveCapabilitiesBuilder.isEmpty) {
       logger.debug(s"No special capabilities required for task ${builder.getTaskId}")

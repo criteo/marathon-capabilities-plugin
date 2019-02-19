@@ -118,7 +118,7 @@ class CapabilitiesPluginSpec extends FunSpec with MockFactory {
             .setValue("./a_command"))
           taskInfoBuilder.getLabelsBuilder.addLabels(Label.newBuilder()
             .setKey("MESOS_BOUNDING_CAPABILITIES")
-            .setValue("NET_RAW;NET_ADMIN"))
+            .setValue("NET_RAW,NET_ADMIN"))
 
           plugin.taskInfo(appSpec, taskInfoBuilder)
 
@@ -157,7 +157,7 @@ class CapabilitiesPluginSpec extends FunSpec with MockFactory {
             .setValue("./a_command"))
           taskInfoBuilder.getLabelsBuilder.addLabels(Label.newBuilder()
             .setKey("MESOS_EFFECTIVE_CAPABILITIES")
-            .setValue("NET_RAW;NET_ADMIN"))
+            .setValue("NET_RAW,NET_ADMIN"))
 
           plugin.taskInfo(appSpec, taskInfoBuilder)
 
@@ -178,7 +178,7 @@ class CapabilitiesPluginSpec extends FunSpec with MockFactory {
             .setValue("./a_command"))
           taskInfoBuilder.getLabelsBuilder.addLabels(Label.newBuilder()
             .setKey("MESOS_BOUNDING_CAPABILITIES")
-            .setValue("   NET_RAW  ;   NET_ADMIN  "))
+            .setValue("   NET_RAW  ,   NET_ADMIN  "))
 
           plugin.taskInfo(appSpec, taskInfoBuilder)
 
@@ -188,20 +188,22 @@ class CapabilitiesPluginSpec extends FunSpec with MockFactory {
           ).asJava)
         }
 
-        it("should not crash on unknown capabilities") {
-          val plugin = new CapabilitiesPlugin
-          val appSpec = mock[ApplicationSpec]
-          val taskInfoBuilder = TaskInfo.newBuilder
+        describe("Unknown capabilities") {
+          it("should modify task to write error message in stderr") {
+            val plugin = new CapabilitiesPlugin
+            val appSpec = mock[ApplicationSpec]
+            val taskInfoBuilder = TaskInfo.newBuilder
 
-          taskInfoBuilder.setCommand(CommandInfo.newBuilder()
-            .setValue("./a_command"))
-          taskInfoBuilder.getLabelsBuilder.addLabels(Label.newBuilder()
-            .setKey("MESOS_BOUNDING_CAPABILITIES")
-            .setValue("CUSTOM_CAPABILITY;UNKNOWN_CAPA"))
+            taskInfoBuilder.setCommand(CommandInfo.newBuilder()
+              .setValue("./a_command"))
+            taskInfoBuilder.getLabelsBuilder.addLabels(Label.newBuilder()
+              .setKey("MESOS_BOUNDING_CAPABILITIES")
+              .setValue("CUSTOM_CAPABILITY;UNKNOWN_CAPA"))
 
-          plugin.taskInfo(appSpec, taskInfoBuilder)
+            plugin.taskInfo(appSpec, taskInfoBuilder)
 
-          assert(taskInfoBuilder.getContainer.getLinuxInfo.getBoundingCapabilities.getCapabilitiesList == List().asJava)
+            assert(taskInfoBuilder.getCommand.getValue.matches("echo '.*' >&2 && exit 1"))
+          }
         }
       }
     }
