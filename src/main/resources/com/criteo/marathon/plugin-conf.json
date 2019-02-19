@@ -1,0 +1,9 @@
+{
+  "plugins": {
+    "capabilities": {
+      "plugin": "mesosphere.marathon.plugin.task.RunSpecTaskProcessor",
+      "implementation": "com.criteo.marathon.CapabilitiesPlugin"
+    }
+  }
+}
+
