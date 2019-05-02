@@ -23,7 +23,7 @@ class CapabilitiesPlugin extends RunSpecTaskProcessor with PluginConfiguration w
       // Only implement network capabilities for now.
       case "NET_RAW" => Some(CapabilityInfo.Capability.NET_RAW)
       case "NET_ADMIN" => Some(CapabilityInfo.Capability.NET_ADMIN)
-      case "NET_BIND" => Some(CapabilityInfo.Capability.NET_BIND_SERVICE)
+      case "NET_BIND_SERVICE" => Some(CapabilityInfo.Capability.NET_BIND_SERVICE)
       case "NET_BROADCAST" => Some(CapabilityInfo.Capability.NET_BROADCAST)
       case _ => None
     }
