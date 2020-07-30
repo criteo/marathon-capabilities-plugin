@@ -30,6 +30,21 @@ You can use SBT to build and test this project.
     sbt compile
     sbt test
 
+### Building using Docker sbt image
+
+Assuming you have docker installed, the Makefile targets can be used to clean, build and experiment with the sbt command line.
+
+Clean the target directory
+
+    make clean
+
+Build the plugin jar file
+
+    make build
+
+Open a sbt command prompt to experiment with the build process
+
+    make sbt-shell
 
 ## TODO
 
