@@ -3,7 +3,7 @@ name := "marathon-capabilities-plugin"
 scalaVersion := "2.12.7"
 
 resolvers += Resolver.sonatypeRepo("releases")
-version := "1.0"
+version := "1.1"
 
 resolvers += "Mesosphere Public Repo" at "http://downloads.mesosphere.io/maven"
 
