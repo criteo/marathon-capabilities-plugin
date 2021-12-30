@@ -1,0 +1,51 @@
+---
+name: Release
+
+on:
+  push:
+    branches:
+      - 'master'
+    tags:
+      - '*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up JDK 1.8
+        uses: actions/setup-java@v1
+        with:
+          java-version: 1.8
+      - name: Build artifact
+        run: sbt assembly
+      - name: Identify artifact
+        id: identify_artifact
+        run: ./identify_artifact.sh
+      - name: Publish artifact
+        uses: actions/upload-artifact@v2-preview
+        if: success()
+        with:
+          name: ${{ steps.identify_artifact.outputs.artifact }}
+          path: ${{ steps.identify_artifact.outputs.path }}
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: "v${{ steps.identify_artifact.outputs.version }}"
+          release_name: "v${{ steps.identify_artifact.outputs.version }}"
+          draft: false
+          prerelease: false
+      - name: Upload Release Asset
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ${{ steps.identify_artifact.outputs.path }}
+          asset_name: ${{ steps.identify_artifact.outputs.artifact }}
+          asset_content_type: application/octet-stream
+
